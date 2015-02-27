@@ -1,0 +1,33 @@
+<html>
+<head>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    $(document).ready(function() {
+
+        function RainBowColor(length, maxLength)
+        {
+                var i = (length * 255 / maxLength);
+                    var r = Math.round(Math.sin(0.024 * i + 0) * 127 + 128);
+                        var g = Math.round(Math.sin(0.024 * i + 2) * 127 + 128);
+                            var b = Math.round(Math.sin(0.024 * i + 4) * 127 + 128);
+                                return 'rgb(' + r + ',' + g + ',' + b + ')';
+                            }
+
+      var socket = io.connect('http://localhost:8080');
+      socket.on('message', function(message) {
+          console.log(message);
+            document.getElementById("square").style.backgroundColor = RainBowColor(message, 1024);
+      });
+      $('#button').click(function(e){
+        socket.emit('click');
+        e.preventDefault();
+      });
+    });  
+  </script>
+</head>
+<body>
+  <button id="button" href="#">LED ON/OFF</button>
+  <div id="square" style="width:500px;height:100px;border:1px solid #000;"></div>
+</body>
+</html>

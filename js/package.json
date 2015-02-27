@@ -1,0 +1,22 @@
+{
+  "name": "name",
+  "version": "1.0.0",
+  "description": "Description",
+  "main": "ledtest.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "github.com/mtrogers/kaleidoscope"
+  },
+  "author": "Mitch Rogers",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mtrogers/kaleidoscope/issues"
+  },
+  "homepage": "https://github.com/mtrogers/kaleidoscope",
+  "dependencies": {
+    "johnny-five": "^0.8.44"
+  }
+}
