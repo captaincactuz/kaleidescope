@@ -5,7 +5,8 @@
   "main": "script.js",
   "dependencies": {
     "johnny-five": "~0.5.14",
-    "socket.io": "~0.9.13"
+    "socket.io": "~0.9.13",
+    "three": "^0.70.0"
   },
   "devDependencies": {},
   "scripts": {
