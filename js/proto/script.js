@@ -1,4 +1,3 @@
-//var app = require('http').createServer(handler),
 var express = require('express'),
      fs = require('fs'),
      five = require('johnny-five');
@@ -7,69 +6,68 @@ var server = require('http').Server(app);
 var io = require('socket.io')(server);
      //io = require('socket.io').listen(app);
 app.use(express.static(__dirname + '/mrdoob'));
-//app.listen(8080);
 server.listen(8080);
-/*
-function handler (req, res) {
-  fs.readFile(__dirname + '/index.html',
-  //fs.readFile(__dirname + '/mrdoob/examples/webgl.html',
-  function (err, data) {
-    if (err) {
-      res.writeHead(500);
-      return res.end('Error loading *index.html: ' + err);
-    }
-
-    res.writeHead(200);
-    res.end(data);
-  });
-}
-*/
 
 
 board = new five.Board();
 
 board.on("ready", function() {
-  //led = new five.Led(13);
 
-var ctrlA =	new five.Led(13),
-	ctrlB =	new five.Led(12),
-	ctrlC = new five.Led(11);
+var ctrlA =	new five.Pin(13),
+	ctrlB =	new five.Pin(12),
+	ctrlC = new five.Pin(11);
   var controlpins = {
   };
   pott = new five.Sensor({
       pin: "A2",
       freq: 250
     });
-  dial = new five.Sensor({
+  A0 = new five.Sensor({
       pin: "A0",
+      freq: 250 
+  });
+  A1 = new five.Sensor({
+      pin: "A1",
       freq: 250
   });
   board.repl.inject({
-    pot: pott,
-    pot: dial
+    pot: A1,
+    pot: A0
   });
 
   io.sockets.on('connection', function (socket) {
-	while(true) {
-	    dial.on("data", function() {
-       	    	socket.emit('dial', this.value);
-            });
+	var i = 0;
+//	while(true) {
+//	    A0.on("data", function() {
+//		//       	    	socket.emit('A0', this.value);
+ //           });
 	    //controlpins[0].write(i & 1 ? 1 : 0);
 	    //controlpins[1].write(i & 1 ? 1 : 0);
 	    //controlpins[2].write(i & 1 ? 1 : 0);
-		ctrl.write(i & 1 ? 1 : 0);
-	    if (i++ == 1) {
-		i = 0;
-	    }
 	    
-	}
+//	}
         pott.on("data", function() {
             //console.log(this.value, this.raw);
             socket.emit('message', this.value);
         });
-        dial.on("data", function() {
-            socket.emit('dial', this.value);
+        A0.on("data", function() {
+
+	ctrlA.write(i & 1 );
+	ctrlB.write((i>>1) & 1 );
+	ctrlC.write((i>>2) & 1 );
+	    if (i++ == 7) {
+		i = 0;
+	    }
+		console.log('A0.pin: ', i, ': ',  this.value);
+		ctrlB.query(function(state) {
+//			console.log(state);
+		});	
+            socket.emit('A0', this.value);
         });
+	A1.on("data", function() {
+//		console.log('A1: ', this.value);
+		socket.emit('message2', this.value);
+	});
     socket.on('click', function () {
       led.toggle();
     });
