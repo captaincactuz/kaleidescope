@@ -1,75 +1,79 @@
 var express = require('express'),
-     fs = require('fs'),
-     five = require('johnny-five');
+fs = require('fs'),
+five = require('johnny-five');
 var  app = express();   
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
      //io = require('socket.io').listen(app);
-app.use(express.static(__dirname + '/mrdoob'));
-server.listen(8080);
+     app.use(express.static(__dirname + '/mrdoob'));
+     server.listen(8080);
 
+     board = new five.Board();
+     board.on("ready", function() {
 
-board = new five.Board();
+      var ctrlA =	new five.Pin(13),
+      ctrlB =	new five.Pin(12),
+      ctrlC = new five.Pin(11);
+      pott = new five.Sensor({
+        pin: "A2",
+        freq: 250
+      });
+      dial = new five.Sensor({
+        pin: "A0",
+        freq: 25
+      });
+      board.repl.inject({
+        pot: pott,
+        pot: dial
+      });
 
-board.on("ready", function() {
+      io.sockets.on('connection', function (socket) {
+       console.log("SOCKET");
+       var i = 0;
+       var thisval;
+       var prevValue = [0,0,0,0,0,0,0]; 
+       var newValue = [0,0,0,0,0,0,0];
+       var triggers = [
+        /*'0':*/ 't0',
+        /*'1':*/ 'zoom',
+        /*'2':*/ 't2',
+        /*'3':*/ 't3',
+        /*'4':*/ 't4',
+        /*'5':*/ 't5',
+        /*'6':*/ 'opacity',
+        /*'7':*/ 't7'
+      ];
 
-var ctrlA =	new five.Pin(13),
-	ctrlB =	new five.Pin(12),
-	ctrlC = new five.Pin(11);
-  var controlpins = {
-  };
-  pott = new five.Sensor({
-      pin: "A2",
-      freq: 250
-    });
-  A0 = new five.Sensor({
-      pin: "A0",
-      freq: 250 
-  });
-  A1 = new five.Sensor({
-      pin: "A1",
-      freq: 250
-  });
-  board.repl.inject({
-    pot: A1,
-    pot: A0
-  });
+      dial.on("data", function() {
+        var alpha = 0.5;
+        var sockvar = '';
+        if (this.value - prevValue[i] > 450) {
+          alpha = .1;
+        }
+	      newValue[i] = lerp(prevValue[i], this.value, alpha);
+        console.log(i + '-' + triggers[i] + ": " + this.value + ', ' + newValue[i]);
+        prevValue[i] = newValue[i];
+        socket.emit(triggers[i], newValue[i]);
 
-  io.sockets.on('connection', function (socket) {
-	var i = 0;
-//	while(true) {
-//	    A0.on("data", function() {
-//		//       	    	socket.emit('A0', this.value);
- //           });
-	    //controlpins[0].write(i & 1 ? 1 : 0);
-	    //controlpins[1].write(i & 1 ? 1 : 0);
-	    //controlpins[2].write(i & 1 ? 1 : 0);
-	    
-//	}
-        pott.on("data", function() {
+        ctrlA.write(i & 0x01);
+        ctrlB.write((i >> 1) & 0x01);
+        ctrlC.write((i>>2) & 0x01);
+        if (i++ == 7) {
+         i = 0;
+       }
+     });
+      pott.on("data", function() {
             //console.log(this.value, this.raw);
             socket.emit('message', this.value);
-        });
-        A0.on("data", function() {
-
-	ctrlA.write(i & 1 );
-	ctrlB.write((i>>1) & 1 );
-	ctrlC.write((i>>2) & 1 );
-	    if (i++ == 7) {
-		i = 0;
-	    }
-		console.log('A0.pin: ', i, ': ',  this.value);
-		ctrlB.query(function(state) {
-//			console.log(state);
-		});	
-            socket.emit('A0', this.value);
-        });
-	A1.on("data", function() {
-//		console.log('A1: ', this.value);
-		socket.emit('message2', this.value);
-	});
-    socket.on('click', function () {
-      led.toggle();
+          });
+      dial.on("data", function() {
+        socket.emit('dial', this.value);
+      });
     });
-  }); 
-});
+
+   });
+
+
+function lerp(v0, v1, t) {
+  return v0*(1-t)+v1*t
+}
